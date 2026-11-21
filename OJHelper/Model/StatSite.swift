@@ -36,7 +36,7 @@ enum StatSite: String, CaseIterable, Identifiable, Codable {
         }
     }
 
-    /// 复用比赛页的六站 logo；VJudge / HDU 没有本地图。
+    /// 比赛六站复用同一套 logo；VJudge 用自绘 VJ 徽标，HDU 用其站点图标。
     var logoName: String? {
         switch self {
         case .cf: return "logo_cf"
@@ -44,7 +44,21 @@ enum StatSite: String, CaseIterable, Identifiable, Codable {
         case .lc: return "logo_lc"
         case .lg: return "logo_luogu"
         case .nc: return "logo_nowcoder"
-        case .vj, .hdu: return nil
+        case .vj: return "logo_vj"
+        case .hdu: return "logo_hdu"
+        }
+    }
+
+    /// ojhunt 聚合接口里各站的路径名（牛客是 nowcoder，不是 nc）。
+    var ojhuntCode: String? {
+        switch self {
+        case .cf: return "cf"
+        case .atcoder: return "atcoder"
+        case .lc: return "leetcode"
+        case .lg: return "luogu"
+        case .nc: return "nowcoder"
+        case .vj: return "vjudge"
+        case .hdu: return "hdu"
         }
     }
 

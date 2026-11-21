@@ -50,7 +50,7 @@ enum StatsService {
         var snap = StatsSnapshot()
         snap.rating = number(user["rating"])
         if let rank = user["rank"] as? String { snap.extra = rank }
-        var solved = try await ojhunt("cf", h)
+        var solved = try await ojhunt(.cf, h)
         if solved < 0 { solved = try await codeforcesSolved(h) }
         snap.solved = solved
         return snap
@@ -85,7 +85,7 @@ enum StatsService {
            let last = history.last as? [String: Any] {
             snap.rating = number(last["NewRating"])
         }
-        var solved = try await ojhunt("atcoder", h)
+        var solved = try await ojhunt(.atcoder, h)
         if solved < 0,
            let ac = try? await getJSON("https://kenkoooo.com/atcoder/atcoder-api/v3/user/ac_rank?user=\(enc)") {
             solved = (ac["count"] as? Int) ?? -1
@@ -163,27 +163,36 @@ enum StatsService {
     private static func nowcoder(_ h: String) async throws -> StatsSnapshot {
         let enc = h.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? h
         let html = try await getString("https://ac.nowcoder.com/acm/contest/profile/\(enc)")
+        if html.contains("用户不存在") || html.contains("该用户不存在") {
+            throw StatsError(message: "用户 id 不存在")
+        }
         var snap = StatsSnapshot()
         if let text = firstMatch(#"class="state-num rate-score4">(\d+)<"#, in: html) {
             snap.rating = Double(text)
         }
-        if let text = firstMatch(#"Rating排名</span>\s*<[^>]*>\s*(\d+)"#, in: html)
-            ?? firstMatch(#"Rating排名[^0-9]{0,120}?(\d+)"#, in: html) {
-            snap.extra = "Rating 排名 \(text)"
+        // 结构：<a href="/acm/contest/rating-index">5007</a></div><span>Rating排名</span>
+        if let range = html.range(of: "Rating排名") {
+            let lower = html.index(range.lowerBound, offsetBy: -300, limitedBy: html.startIndex) ?? html.startIndex
+            let prefix = String(html[lower..<range.lowerBound])
+            if let text = firstMatch(#">(\d+)</a>\s*</div>\s*<span>\s*$"#, in: prefix) {
+                snap.extra = "Rating 排名 \(text)"
+            }
         }
-        var solved = try await ojhunt("nc", h)
-        if solved < 0 { solved = -1 }
-        snap.solved = solved
+        // 个人主页不公开解题数，借 ojhunt 补（路径名是 nowcoder）。
+        snap.solved = try await ojhunt(.nc, h)
         return snap
     }
 
     private static func vjudge(_ h: String) async throws -> StatsSnapshot {
         let enc = h.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? h
         let html = try await getString("https://vjudge.net/user/\(enc)")
-        guard let jsonText = firstMatch(#"<script id="profile-header-data"[^>]*>([\s\S]*?)</script>"#, in: html),
+        if html.contains("user_not_found") {
+            throw StatsError(message: "VJudge 上没有这个用户名（区分大小写，先到 vjudge.net/user/\(h) 确认）")
+        }
+        guard let jsonText = firstMatch(#"<script[^>]*id="profile-header-data"[^>]*>([\s\S]*?)</script>"#, in: html),
               let data = jsonText.data(using: .utf8),
               let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
-            throw StatsError(message: "用户不存在或页面结构已变化")
+            throw StatsError(message: "页面结构已变化，读不到统计数据")
         }
         var snap = StatsSnapshot()
         if let counts = json["counts"] as? [String: Any] {
@@ -214,7 +223,8 @@ enum StatsService {
     // MARK: - 公共数据源与工具
 
     /// ojhunt 统一抓解题数；失败返回 -1。
-    private static func ojhunt(_ code: String, _ handle: String) async throws -> Int {
+    private static func ojhunt(_ site: StatSite, _ handle: String) async throws -> Int {
+        guard let code = site.ojhuntCode else { return -1 }
         let esc = handle.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? handle
         guard let json = try? await getJSON("https://ojhunt.com/api/crawlers/\(code)/\(esc)"),
               let data = json["data"] as? [String: Any] else { return -1 }
