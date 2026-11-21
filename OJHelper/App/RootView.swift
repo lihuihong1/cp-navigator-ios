@@ -18,6 +18,11 @@ struct RootView: View {
             .tabItem { Label("收藏", systemImage: "star") }
 
             NavigationStack {
+                BoardsView()
+            }
+            .tabItem { Label("榜单", systemImage: "list.number") }
+
+            NavigationStack {
                 SettingsView()
             }
             .tabItem { Label("我的", systemImage: "person") }

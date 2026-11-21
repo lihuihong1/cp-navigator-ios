@@ -1,6 +1,6 @@
 # cp-navigator-ios
 
-OJ 助手的 iOS 版（SwiftUI）。当前 **1.2.0**：六站真实比赛 + 开赛提醒 + 日历写入（P2），界面按 Android 版重做。
+OJ 助手的 iOS 版（SwiftUI）。当前 **1.3.0**：六站真实比赛 + 开赛提醒 + 日历写入 + 榜单，界面按 Android 版重做。
 
 ## 功能
 
@@ -11,6 +11,7 @@ OJ 助手的 iOS 版（SwiftUI）。当前 **1.2.0**：六站真实比赛 + 开�
 - **收藏页**：只读本地，不联网；支持同样的提醒与日历操作。
 - **提醒**：`UNUserNotificationCenter` 本地通知，杀进程也会响。
 - **容错**：单站失败不影响其它站，列表底部提示失败站点。
+- **榜单**：XCPCIO（ICPC / CCPC 实时榜与历史榜）与 RankLand（400+ 赛事榜单合集），应用内 WebView 打开；带进度条、7 秒慢加载提示，右上角「浏览器」可改用系统浏览器。
 
 ## 目录
 
@@ -21,7 +22,7 @@ OJHelper/
   Design/                Theme.swift（与 Android 版同一套配色）
   Model/                 Contest.swift
   Service/               ContestAPI（六站抓取）、ContestStore、NotificationManager、CalendarService
-  Views/                 ContestListView、ContestRow、FavoritesView、SourcesSheet、CalendarEditor、SettingsView、LogoView
+  Views/                 ContestListView、ContestRow、FavoritesView、SourcesSheet、CalendarEditor、SettingsView、LogoView、BoardsView、BoardWebView
   Resources/             Assets.xcassets（AppIcon、AccentColor、六站 logo）
 .github/workflows/ios.yml  构建未签名 IPA 的 CI
 ```
@@ -38,7 +39,7 @@ xcodegen generate
 open OJHelper.xcodeproj
 ```
 
-CI 每次 push 到 `main` 会自动构建未签名 IPA，产物在 Actions 的 `OJHelper-unsigned-ipa` artifact；打 `v*` tag 时自动发 Release（只上传 IPA，不附 sha256）。
+CI 每次 push 到 `main` 会自动构建未签名 IPA，产物在 Actions 的 `OJHelper-unsigned-ipa` artifact（IPA + 源码 zip）；打 `v*` tag 时自动发 Release（挂 IPA 与 src.zip，不附 sha256）。
 
 ## 安装（未签名）
 
@@ -60,6 +61,8 @@ CI 每次 push 到 `main` 会自动构建未签名 IPA，产物在 Actions 的 `
 | 蓝桥 | `lanqiao.cn/api/v2/contests/?status=not_finished&game_type_code=2` |
 | AtCoder | `atcoder.jp/contests/` 的 SSR 表格 |
 | 牛客 | `ac.nowcoder.com/acm/contest/vip-index` |
+
+榜单入口：`board.xcpcio.com`（XCPCIO）、`rl.algoux.cn`（RankLand），均在应用内 WebView 打开。
 
 站点改版可能导致单站失败，属已知限制。
 
