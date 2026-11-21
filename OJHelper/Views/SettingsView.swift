@@ -35,7 +35,7 @@ struct SettingsView: View {
 
                 Section("关于") {
                     LabeledContent("版本", value: version)
-                    Text("P0 骨架：比赛为内置示例数据（相对当前时间生成），本地通知已可用；真实抓取与日历写入在后续版本接入。")
+                    Text("P1：比赛列表来自六个 OJ 的官网接口（洛谷 / Codeforces / AtCoder / 蓝桥云课 / 力扣 / 牛客），下拉刷新；数据会缓存，断网时展示上次结果。")
                         .font(.footnote)
                         .foregroundStyle(.secondary)
                 }

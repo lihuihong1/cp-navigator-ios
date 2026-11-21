@@ -10,6 +10,18 @@ struct ContestRow: View {
         contest.start <= Date()
     }
 
+    /// 和 Android 版一致的站点色。
+    private var ojColor: Color {
+        switch contest.oj {
+        case .cf: return Color(red: 0.12, green: 0.54, blue: 0.80)
+        case .atcoder: return Color(red: 0.23, green: 0.23, blue: 0.27)
+        case .luogu: return Color(red: 0.00, green: 0.65, blue: 0.65)
+        case .lanqiao: return Color(red: 0.12, green: 0.48, blue: 0.91)
+        case .leetcode: return Color(red: 0.97, green: 0.62, blue: 0.11)
+        case .nowcoder: return Color(red: 0.00, green: 0.73, blue: 0.42)
+        }
+    }
+
     var body: some View {
         HStack(spacing: 12) {
             VStack(spacing: 2) {
@@ -23,12 +35,12 @@ struct ContestRow: View {
 
             VStack(alignment: .leading, spacing: 4) {
                 HStack(spacing: 6) {
-                    Text(contest.oj)
+                    Text(contest.oj.short)
                         .font(.caption2.weight(.semibold))
                         .padding(.horizontal, 6)
                         .padding(.vertical, 2)
-                        .background(Color.accentColor.opacity(0.15), in: Capsule())
-                        .foregroundStyle(Color.accentColor)
+                        .background(ojColor.opacity(0.15), in: Capsule())
+                        .foregroundStyle(ojColor)
 
                     if started {
                         Text("已开始")

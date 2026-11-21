@@ -49,7 +49,7 @@ final class NotificationManager: ObservableObject {
 
         let content = UNMutableNotificationContent()
         content.title = lead <= 0 ? "比赛马上开始" : "比赛将在 \(lead) 分钟后开始"
-        content.body = "[\(contest.oj)] \(contest.title)\n\(contest.timeRange)"
+        content.body = "[\(contest.oj.name)] \(contest.title)\n\(contest.timeRange)"
         content.sound = .default
         content.threadIdentifier = "contest"
 
