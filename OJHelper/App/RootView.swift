@@ -19,7 +19,10 @@ struct RootView: View {
         }
         .onChange(of: scenePhase) { _, phase in
             if phase == .active {
-                Task { await notifier.refresh() }
+                Task {
+                    await notifier.refresh()
+                    await store.refreshIfStale()
+                }
             }
         }
     }
