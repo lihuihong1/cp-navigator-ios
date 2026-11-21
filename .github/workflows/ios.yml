@@ -1,0 +1,77 @@
+name: build-ipa
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: ios-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ipa:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Toolchain
+        run: |
+          xcodebuild -version
+          xcodegen --version || true
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Generate Xcode project
+        run: xcodegen generate
+
+      - name: Build (unsigned)
+        run: |
+          set -o pipefail
+          xcodebuild \
+            -project OJHelper.xcodeproj \
+            -scheme OJHelper \
+            -configuration Release \
+            -sdk iphoneos \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            build | tail -n 40
+
+      - name: Package IPA
+        id: pack
+        run: |
+          APP="build/Build/Products/Release-iphoneos/OJHelper.app"
+          test -d "$APP"
+          VER=$(/usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" "$APP/Info.plist")
+          BUILD=$(/usr/libexec/PlistBuddy -c "Print :CFBundleVersion" "$APP/Info.plist")
+          NAME="OJHelper-${VER}-${BUILD}-unsigned.ipa"
+          mkdir -p out/Payload
+          cp -R "$APP" out/Payload/
+          (cd out && zip -qry "$NAME" Payload)
+          shasum -a 256 "out/$NAME" | tee out/sha256.txt
+          echo "name=$NAME" >> "$GITHUB_OUTPUT"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: OJHelper-unsigned-ipa
+          path: |
+            out/*.ipa
+            out/sha256.txt
+          if-no-files-found: error
+
+      - name: Publish release (tag only)
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            out/*.ipa
+            out/sha256.txt
+          fail_on_unmatched_files: true
