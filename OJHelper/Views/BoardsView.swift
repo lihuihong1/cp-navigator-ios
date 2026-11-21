@@ -16,7 +16,15 @@ struct BoardsView: View {
         BoardInfo(id: "rankland",
                   title: "RankLand",
                   subtitle: "400+ 赛事榜单合集",
-                  url: URL(string: "https://rl.algoux.cn")!)
+                  url: URL(string: "https://rl.algoux.cn")!),
+        BoardInfo(id: "iccpc",
+                  title: "CCPC 外榜",
+                  subtitle: "ICPC / CCPC 校外榜单（Outrank）",
+                  url: URL(string: "https://rank.iccpc.cn/")!),
+        BoardInfo(id: "cpcfinder",
+                  title: "CPC Finder",
+                  subtitle: "程序设计竞赛选手成绩查询",
+                  url: URL(string: "https://cpcfinder.com/")!)
     ]
 
     @State private var opened: BoardInfo?
