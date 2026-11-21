@@ -1,0 +1,16 @@
+# macOS
+.DS_Store
+
+# Xcode
+build/
+DerivedData/
+xcuserdata/
+*.xcuserstate
+
+# XcodeGen 生成物（project.yml 才是源头）
+*.xcodeproj
+*.xcworkspace
+
+# 打包产物
+out/
+*.ipa
