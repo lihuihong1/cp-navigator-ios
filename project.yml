@@ -9,7 +9,7 @@ options:
 settings:
   base:
     MARKETING_VERSION: "1.0.0"
-    CURRENT_PROJECT_VERSION: "3"
+    CURRENT_PROJECT_VERSION: "1"
     SWIFT_VERSION: "5.0"
     IPHONEOS_DEPLOYMENT_TARGET: "17.0"
 
@@ -19,23 +19,16 @@ targets:
     platform: iOS
     sources:
       - path: OJHelper
-    info:
-      path: Support/Info.plist
-      properties:
-        CFBundleDisplayName: "OJ 助手"
-        CFBundleShortVersionString: "$(MARKETING_VERSION)"
-        CFBundleVersion: "$(CURRENT_PROJECT_VERSION)"
-        UILaunchScreen: {}
-        UISupportedInterfaceOrientations:
-          - UIInterfaceOrientationPortrait
-        UIUserInterfaceStyle: Automatic
-        NSCalendarsWriteOnlyAccessUsageDescription: "把比赛添加到你的日历，并提前 15 分钟提醒。"
-        NSCalendarsUsageDescription: "把比赛添加到你的日历，并提前 15 分钟提醒。"
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.ojhelper.ios
         PRODUCT_NAME: OJHelper
-        GENERATE_INFOPLIST_FILE: NO
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_CFBundleDisplayName: "OJ 助手"
+        INFOPLIST_KEY_UILaunchScreen_Generation: YES
+        INFOPLIST_KEY_UIApplicationSceneManifest_Generation: YES
+        INFOPLIST_KEY_UISupportedInterfaceOrientations: UIInterfaceOrientationPortrait
+        INFOPLIST_KEY_UIUserInterfaceStyle: Automatic
         TARGETED_DEVICE_FAMILY: "1"
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor

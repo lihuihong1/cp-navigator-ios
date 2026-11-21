@@ -57,12 +57,25 @@ jobs:
           (cd out && zip -qry "$NAME" Payload)
           echo "name=$NAME" >> "$GITHUB_OUTPUT"
 
+      - name: Package source zip
+        run: |
+          APP="build/Build/Products/Release-iphoneos/OJHelper.app"
+          VER=$(/usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" "$APP/Info.plist")
+          BUILD=$(/usr/libexec/PlistBuddy -c "Print :CFBundleVersion" "$APP/Info.plist")
+          NAME="OJHelper-${VER}-${BUILD}-src.zip"
+          rm -rf srcpkg
+          mkdir -p srcpkg out
+          git archive HEAD | tar -x -C srcpkg
+          sed -i '' 's/lihuihong1/CP Navigator contributors/' srcpkg/LICENSE
+          (cd srcpkg && zip -qry "../out/$NAME" .)
+
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: OJHelper-unsigned-ipa
           path: |
             out/*.ipa
+            out/*-src.zip
           if-no-files-found: error
 
       - name: Publish release (tag only)
@@ -72,4 +85,5 @@ jobs:
           generate_release_notes: true
           files: |
             out/*.ipa
+            out/*-src.zip
           fail_on_unmatched_files: true
