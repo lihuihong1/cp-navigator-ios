@@ -34,10 +34,12 @@ struct ContestListView: View {
 
     private var sections: some View {
         ForEach(store.grouped) { group in
-            Section(group.day) {
+            Section {
                 ForEach(group.items) { contest in
                     row(for: contest)
                 }
+            } header: {
+                Text(group.day)
             }
         }
     }
