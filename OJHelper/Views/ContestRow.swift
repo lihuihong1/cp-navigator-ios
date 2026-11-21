@@ -1,92 +1,131 @@
 import SwiftUI
 
+/// 一行比赛，比赛页 / 收藏页共用。布局对齐 Android 版 ContestRow.java：
+/// 站点 logo、标题 + 时间/时长 + 状态、☆ 收藏、铃铛提醒、日历按钮。
 struct ContestRow: View {
     let contest: Contest
-    let isReminded: Bool
-    let onSetReminder: (Int) -> Void
-    let onCancel: () -> Void
+    var dateMode: Bool = false
+    var showLogo: Bool = true
+    var isFavorite: Bool
+    var reminderLead: Int?
+    var onOpen: () -> Void
+    var onToggleFavorite: () -> Void
+    var onSetReminder: (Int?) -> Void
+    var onAddCalendar: () -> Void
 
-    private var started: Bool {
-        contest.start <= Date()
-    }
+    private var now: Date { Date() }
 
-    /// 和 Android 版一致的站点色。
-    private var ojColor: Color {
-        switch contest.oj {
-        case .cf: return Color(red: 0.12, green: 0.54, blue: 0.80)
-        case .atcoder: return Color(red: 0.23, green: 0.23, blue: 0.27)
-        case .luogu: return Color(red: 0.00, green: 0.65, blue: 0.65)
-        case .lanqiao: return Color(red: 0.12, green: 0.48, blue: 0.91)
-        case .leetcode: return Color(red: 0.97, green: 0.62, blue: 0.11)
-        case .nowcoder: return Color(red: 0.00, green: 0.73, blue: 0.42)
-        }
+    private var subtitle: String {
+        dateMode ? contest.span : "\(Contest.dayLabel(contest.start)) \(contest.span)"
     }
 
     var body: some View {
-        HStack(spacing: 12) {
-            VStack(spacing: 2) {
-                Text(Contest.hm(contest.start))
-                    .font(.subheadline.weight(.semibold))
-                Text(Contest.hm(contest.end))
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+        HStack(spacing: 8) {
+            if showLogo {
+                LogoView(oj: contest.oj, size: 32)
+                    .padding(.trailing, 2)
             }
-            .frame(width: 52)
 
-            VStack(alignment: .leading, spacing: 4) {
-                HStack(spacing: 6) {
-                    Text(contest.oj.short)
-                        .font(.caption2.weight(.semibold))
-                        .padding(.horizontal, 6)
-                        .padding(.vertical, 2)
-                        .background(ojColor.opacity(0.15), in: Capsule())
-                        .foregroundStyle(ojColor)
-
-                    if started {
-                        Text("已开始")
-                            .font(.caption2)
-                            .foregroundStyle(.secondary)
-                    }
-                }
+            VStack(alignment: .leading, spacing: 3) {
                 Text(contest.title)
-                    .font(.subheadline.weight(.medium))
+                    .font(.system(size: 14.5))
+                    .foregroundStyle(Theme.text)
                     .lineLimit(2)
-            }
+                    .truncationMode(.tail)
+                    .multilineTextAlignment(.leading)
 
-            Spacer(minLength: 8)
+                Text(subtitle)
+                    .font(.system(size: 12))
+                    .foregroundStyle(Theme.sub)
 
-            Menu {
-                if isReminded {
-                    Button("关闭提醒", role: .destructive) {
-                        onCancel()
-                    }
-                    Divider()
+                if contest.running(now) {
+                    Text("进行中")
+                        .font(.system(size: 11, weight: .bold))
+                        .foregroundStyle(Theme.green)
+                } else if contest.finished(now) {
+                    Text("已结束")
+                        .font(.system(size: 11))
+                        .foregroundStyle(Theme.sub)
                 }
-                Button("开赛时") { onSetReminder(0) }
-                Button("提前 5 分钟") { onSetReminder(5) }
-                Button("提前 10 分钟") { onSetReminder(10) }
-                Button("提前 15 分钟") { onSetReminder(15) }
-            } label: {
-                Image(systemName: isReminded ? "bell.fill" : "bell")
-                    .font(.system(size: 20))
-                    .foregroundStyle(isReminded ? Color.accentColor : Color.secondary)
-                    .frame(width: 36, height: 36)
-                    .contentShape(Rectangle())
             }
-            .disabled(started)
-            .opacity(started ? 0.35 : 1)
+            .frame(maxWidth: .infinity, alignment: .leading)
+
+            Button(action: onToggleFavorite) {
+                Image(systemName: isFavorite ? "star.fill" : "star")
+                    .font(.system(size: 17))
+                    .foregroundStyle(isFavorite ? Theme.star : Theme.starOff)
+                    .frame(width: 28, height: 30)
+            }
+            .buttonStyle(.plain)
+
+            reminderMenu
+
+            Button(action: onAddCalendar) {
+                Text("日历")
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(Theme.accent)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 7, style: .continuous)
+                            .stroke(Theme.accent, lineWidth: 1)
+                    )
+            }
+            .buttonStyle(.plain)
         }
-        .padding(.vertical, 2)
+        .padding(.vertical, 11)
+        .contentShape(Rectangle())
+        .onTapGesture(perform: onOpen)
+    }
+
+    private var reminderMenu: some View {
+        Menu {
+            if let lead = reminderLead {
+                Button("关闭提醒") { onSetReminder(nil) }
+                Divider()
+                ForEach(ReminderOption.all, id: \.self) { option in
+                    Button(label(for: option, current: lead)) { onSetReminder(option) }
+                }
+            } else {
+                ForEach(ReminderOption.all, id: \.self) { option in
+                    Button(label(for: option, current: nil)) { onSetReminder(option) }
+                }
+            }
+        } label: {
+            Image(systemName: reminderLead == nil ? "bell" : "bell.fill")
+                .font(.system(size: 17))
+                .foregroundStyle(reminderLead == nil ? Theme.sub : Theme.accent)
+                .frame(width: 26, height: 30)
+        }
+    }
+
+    private func label(for lead: Int, current: Int?) -> String {
+        let title = lead == 0 ? "比赛开始时" : "提前 \(lead) 分钟"
+        return current == lead ? "✓ \(title)" : title
     }
 }
 
+enum ReminderOption {
+    static let all = [0, 5, 10, 15]
+}
+
 #Preview {
-    List {
-        ContestRow(
-            contest: SampleData.contests()[0],
-            isReminded: true,
-            onSetReminder: { _ in },
-            onCancel: {}
-        )
-    }
+    ContestRow(
+        contest: Contest(
+            oj: .luogu,
+            sid: "1",
+            title: "【LGR-317-Div.2】洛谷 11 月月赛 II & P.A.TASKS S1",
+            start: Date().addingTimeInterval(3600),
+            end: Date().addingTimeInterval(7200),
+            url: URL(string: "https://www.luogu.com.cn/contest/1")
+        ),
+        isFavorite: false,
+        reminderLead: 10,
+        onOpen: {},
+        onToggleFavorite: {},
+        onSetReminder: { _ in },
+        onAddCalendar: {}
+    )
+    .padding(.horizontal, 14)
+    .background(Theme.card)
 }

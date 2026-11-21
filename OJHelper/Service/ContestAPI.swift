@@ -19,10 +19,10 @@ enum ContestAPI {
 
     // MARK: - 入口
 
-    /// 并行拉全部源；单个源失败不影响其他源。
-    static func fetchAll() async -> [OJ: Result<[Contest], Error>] {
+    /// 并行拉取选中的源；单个源失败不影响其他源。
+    static func fetchAll(_ sites: [OJ]) async -> [OJ: Result<[Contest], Error>] {
         await withTaskGroup(of: (OJ, Result<[Contest], Error>).self) { group in
-            for oj in OJ.allCases {
+            for oj in sites {
                 group.addTask {
                     do {
                         let list = try await fetch(oj)
