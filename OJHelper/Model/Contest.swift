@@ -44,7 +44,7 @@ final class ContestStore: ObservableObject {
             }
             buckets[key]?.append(c)
         }
-        return order.map { DayGroup(id: $0, items: buckets[$0] ?? []) }
+        return order.map { DayGroup(day: $0, items: buckets[$0] ?? []) }
     }
 
     func contest(id: String) -> Contest? {
