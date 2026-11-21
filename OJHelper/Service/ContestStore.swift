@@ -86,7 +86,9 @@ final class ContestStore: ObservableObject {
         for oj in sites {
             switch map[oj] {
             case .success(let list):
-                out.append(SiteResult(oj: oj, list: list, error: nil))
+                // 各站接口返回顺序不一致（CF 倒序、AtCoder 正序…），统一按开赛时间升序，
+                // 「按平台」时最近的比赛排最上面。
+                out.append(SiteResult(oj: oj, list: list.sorted(by: Contest.sortByStart), error: nil))
             case .failure(let error):
                 out.append(SiteResult(oj: oj, list: [], error: error))
             case nil:
