@@ -4,6 +4,7 @@ struct RootView: View {
     @Environment(\.scenePhase) private var scenePhase
     @StateObject private var store = ContestStore()
     @StateObject private var notifier = NotificationManager.shared
+    @StateObject private var stats = StatsStore()
 
     var body: some View {
         TabView {
@@ -23,13 +24,14 @@ struct RootView: View {
             .tabItem { Label("榜单", systemImage: "list.number") }
 
             NavigationStack {
-                SettingsView()
+                ProfileView()
             }
             .tabItem { Label("我的", systemImage: "person") }
         }
         .tint(Theme.accent)
         .environmentObject(store)
         .environmentObject(notifier)
+        .environmentObject(stats)
         .task {
             await NotificationManager.shared.refresh()
         }

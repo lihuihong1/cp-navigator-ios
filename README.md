@@ -1,6 +1,6 @@
 # cp-navigator-ios
 
-OJ 助手的 iOS 版（SwiftUI）。当前 **1.3.0**：六站真实比赛 + 开赛提醒 + 日历写入 + 榜单，界面按 Android 版重做。
+OJ 助手的 iOS 版（SwiftUI）。当前 **1.4.0**：六站真实比赛 + 开赛提醒 + 日历写入 + 榜单 + 我的（成绩统计），界面按 Android 版重做。
 
 ## 功能
 
@@ -12,6 +12,7 @@ OJ 助手的 iOS 版（SwiftUI）。当前 **1.3.0**：六站真实比赛 + 开�
 - **提醒**：`UNUserNotificationCenter` 本地通知，杀进程也会响。
 - **容错**：单站失败不影响其它站，列表底部提示失败站点。
 - **榜单**：XCPCIO（ICPC / CCPC 实时榜与历史榜）与 RankLand（400+ 赛事榜单合集），应用内 WebView 打开；带进度条、7 秒慢加载提示，右上角「浏览器」可改用系统浏览器。
+- **我的**：7 个站点（CF / AtCoder / 力扣 / 洛谷 / 牛客 / VJudge / HDU）用户名或 id 本地保存，逐站查询「解题数 + rating」，支持「全部查询」；「题解统计」用饼图汇总各站解题占比；「清空本地数据」一并清掉用户名、成绩、收藏与提醒。
 
 ## 目录
 
@@ -20,9 +21,9 @@ project.yml              XcodeGen 工程定义（唯一的工程源）
 OJHelper/
   App/                   OJHelperApp.swift、RootView.swift
   Design/                Theme.swift（与 Android 版同一套配色）
-  Model/                 Contest.swift
-  Service/               ContestAPI（六站抓取）、ContestStore、NotificationManager、CalendarService
-  Views/                 ContestListView、ContestRow、FavoritesView、SourcesSheet、CalendarEditor、SettingsView、LogoView、BoardsView、BoardWebView
+  Model/                 Contest.swift、StatSite.swift
+  Service/               ContestAPI（六站抓取）、ContestStore、NotificationManager、CalendarService、StatsService、StatsStore
+  Views/                 ContestListView、ContestRow、FavoritesView、SourcesSheet、CalendarEditor、LogoView、BoardsView、BoardWebView、ProfileView、StatsSheet
   Resources/             Assets.xcassets（AppIcon、AccentColor、六站 logo）
 .github/workflows/ios.yml  构建未签名 IPA 的 CI
 ```
@@ -49,7 +50,7 @@ CI 每次 push 到 `main` 会自动构建未签名 IPA，产物在 Actions 的 `
 
 ## 版本
 
-版本号在 `project.yml` 的 `MARKETING_VERSION` / `CURRENT_PROJECT_VERSION` 维护；打 tag 前改成新版本并同步 tag。
+版本号在 `project.yml` 的 `MARKETING_VERSION` / `CURRENT_PROJECT_VERSION` 维护；打 tag 前改成新版本并同步 tag。规则固定 `1.X.Y`，功能版第二位 +1 并换 `OJIPA/code/N` 目录。
 
 ## 抓取接口（与 Android 版一致）
 
@@ -64,7 +65,19 @@ CI 每次 push 到 `main` 会自动构建未签名 IPA，产物在 Actions 的 `
 
 榜单入口：`board.xcpcio.com`（XCPCIO）、`rl.algoux.cn`（RankLand），均在应用内 WebView 打开。
 
-站点改版可能导致单站失败，属已知限制。
+成绩统计（我的）入口：
+
+| 站点 | 入口 |
+| --- | --- |
+| Codeforces | `api/user.info`、`api/user.status`（解题去重） |
+| AtCoder | `atcoder.jp/users/<h>/history/json`、kenkoooo `ac_rank` |
+| 力扣 | `leetcode.cn/graphql`（numAcceptedQuestions）、`/graphql/noj-go/`（userContestRanking） |
+| 洛谷 | `api/user/search` + `api/user/info/<uid>` |
+| 牛客 | `ac.nowcoder.com/acm/contest/profile/<id>` |
+| VJudge | `vjudge.net/user/<h>` 的 `profile-header-data` JSON |
+| HDU | `acm.hdu.edu.cn/userstatus.php?user=<h>`（GB18030） |
+
+解题数优先取 ojhunt 统一接口，失败再回退各站原生统计。站点改版可能导致单站失败，属已知限制。
 
 ## 与 Android 版的关系
 

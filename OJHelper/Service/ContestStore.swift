@@ -122,6 +122,10 @@ final class ContestStore: ObservableObject {
         return true
     }
 
+    func clearFavorites() {
+        favorites = []
+    }
+
     // MARK: - 分桶
 
     /// 按日期：今天起 7 个自然日；跨零点的比赛算在开始那天，昨天开始且此刻未结束的归今天。
