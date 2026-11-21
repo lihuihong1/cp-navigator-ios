@@ -14,8 +14,8 @@
 cp-navigator/                     ← 产品根（不是 git 仓库）
 ├── README.md                     总规则
 ├── OJIPA/                        iOS 开发工作区（不是 git 仓库）
-│   ├── code/7/                   源码：project.yml + OJHelper/ + build_ipa.sh（1.x 固定此目录）
-│   ├── ipa/7/                    未签名 IPA 归档（本地）
+│   ├── code/1 … code/3            源码：project.yml + OJHelper/（build_ipa.sh 仅本地保留）
+│   ├── ipa/1 … ipa/3              未签名 IPA 归档（本地）
 │   └── tools/                    脱敏打包、Release 发布脚本
 ├── cp-navigator-ios/             ← 本仓库（公开，远端 lihuihong1/cp-navigator-ios）
 │   ├── project.yml               摊平后的源码
@@ -32,18 +32,18 @@ cp-navigator/                     ← 产品根（不是 git 仓库）
 
 ---
 
-## 2. 目录与版本：首位进位才新建目录
+## 2. 目录与版本：功能版换目录（与 Android 一致）
 
 版本格式固定 **`1.X.Y`**：`X` 是功能位，`Y` 是修复位。
 
 | 场景 | 示例 | 动作 |
 | --- | --- | --- |
-| 修复版（第三位 +1） | 1.0.0 → 1.0.1 | 原地改 `OJIPA/code/7`；`CURRENT_PROJECT_VERSION` 加 1 |
-| 功能版（第二位 +1） | 1.0.x → 1.1.0 | **原地**改 `OJIPA/code/7`（1.x 全程固定这个目录）；`CURRENT_PROJECT_VERSION` 加 1 |
-| 大版本（首位 +1） | 1.x → 2.0.0 | **新建** `OJIPA/code/8` 与 `OJIPA/ipa/8`（`cp -r code/7 code/8`，删掉 `build/`、`out/`） |
+| 修复版（第三位 +1） | 1.0.0 → 1.0.1 | 原地改 `OJIPA/code/1`；`CURRENT_PROJECT_VERSION` 加 1 |
+| 功能版（第二位 +1） | 1.0.x → 1.1.0 | **新建** `OJIPA/code/2` 与 `OJIPA/ipa/2`（`cp -r code/1 code/2`，删掉 `build/`、`out/`、`*.xcodeproj`、`Support/`） |
+| 大版本（首位 +1） | 1.x → 2.0.0 | 接着本线最后一个目录往后排（如 1.x 用到 `code/7`，则 2.0 用 `code/8`） |
 
-- 1.x 的目录号固定为 `code/7` / `ipa/7`；首位进位后是 `code/8` / `ipa/8`，即 **`N = 首位 + 6`**。
-- 不要再按「第二位 +1 就新建目录」处理——那是 Android 的规则（Android 是 `N = X + 1`），iOS 已改为按首位进位。
+- **目录号 `N = X + 1`**：1.0→`code/1`，1.1→`code/2`，1.2→`code/3`，1.3→`code/4`，与 Android 的编号规则完全一致。
+- 已按此规则重排过一次历史：P0=1.0.0→`code/1`，P1=1.1.0→`code/2`，P2=1.2.0→`code/3`；旧的 0.1.0/0.2.0 归档在 `backup/legacy-ios-releases/`，不再引用。
 - `code/N` 里只保留这条线**最新**的源码；旧版本靠 git tag 追溯。
 - `ipa/N` 里保留这条线**所有**发布过的 IPA，只增不删。
 
@@ -64,13 +64,13 @@ cp-navigator/                     ← 产品根（不是 git 仓库）
 ```yaml
 settings:
   base:
-    MARKETING_VERSION: "1.0.0"
-    CURRENT_PROJECT_VERSION: "3"
+    MARKETING_VERSION: "1.3.0"
+    CURRENT_PROJECT_VERSION: "4"
 ```
 
 - `Info.plist` 由 XcodeGen 从 `project.yml` 生成，**不要手改**。
 - `CURRENT_PROJECT_VERSION` 必须比上一版大；同版本号的包覆盖安装时系统才认"更新"。
-- tag 名与 `MARKETING_VERSION` 必须一致（打 `v1.0.0` 前先确认 `project.yml` 里就是 `1.0.0`）。查历史版本源码：`git show v1.0.0:project.yml | grep MARKETING`。
+- tag 名与 `MARKETING_VERSION` 必须一致（打 `v1.3.0` 前先确认 `project.yml` 里就是 `1.3.0`）。查历史版本源码：`git show v1.0.0:project.yml | grep MARKETING`。
 - **先定号，再动代码**：每次开发/更新，如果用户没说要发哪个版本，先问清「这次是 `1.X.Y` 的哪一版」，得到答复后再改 `project.yml`。不要自行推测版本号，也不要先改代码再补问。
 
 ---
@@ -86,7 +86,7 @@ settings:
 3. Actions 的 `build-ipa` 工作流在 `macos-15` 上跑：`brew install xcodegen` → `xcodegen generate` → `xcodebuild ... CODE_SIGNING_ALLOWED=NO` → 打 `OJHelper-<ver>-<build>-unsigned.ipa`；
 4. 产物在 Actions artifact `OJHelper-unsigned-ipa`（`gh_wait2.py` 等结果、`gh_dl2.py` 下载）；打 tag 时 `softprops/action-gh-release` 会**自动建 Release**。
 
-> 当前 CI 只挂 IPA，`-src.zip` 要本地生成后补挂（本机 `uploads.github.com` 不可用，见第 7 节）；**规则要求 Release 最终只有 `ipa` + `-src.zip` 两个附件**。
+> CI 现在会同时打包 `OJHelper-<ver>-<build>-unsigned.ipa` 与 `OJHelper-<ver>-<build>-src.zip`（`git archive` 导出 + 脱敏 LICENSE），打 tag 时两个附件一起挂到 Release；**规则要求 Release 只有这两个附件，不放 `sha256.txt`**。
 
 ### 4.2 macOS（有 Mac 时）
 
@@ -132,13 +132,13 @@ open OJHelper.xcodeproj      # 这个 .xcodeproj 是生成物，不进仓库
 ```bash
 cd cp-navigator-ios
 rm -rf OJHelper
-cp -r ../OJIPA/code/7/OJHelper .
-cp ../OJIPA/code/7/project.yml .
+cp -r ../OJIPA/code/N/OJHelper .
+cp ../OJIPA/code/N/project.yml .
 git add -A
 git status --short          # 只应看到 OJHelper/** 与 project.yml
-git commit -m "1.1.0：<一句话改动>"
+git commit -m "1.3.0：<一句话改动>"
 python ../../test-artifacts/gh_push_api.py         # 本机不能 git push
-python ../../test-artifacts/gh_tag.py v1.1.0       # 等 CI 绿后再打 tag
+python ../../test-artifacts/gh_tag.py v1.3.0       # 等 CI 绿后再打 tag
 ```
 
 - **只同步 `OJHelper/` 与 `project.yml`**。`.github/workflows/ios.yml`、`README.md`、`DEVELOPING.md` 只在仓库里改；如果工作区里有多余副本，删掉工作区那份。
