@@ -49,9 +49,9 @@ cp-navigator/                     ← 产品根（不是 git 仓库）
 
 > ⚠️ `build_ipa.sh` 里的输出目录是**写死**的：
 > ```bash
-> OUTDIR="../../ipa/7"
+> OUTDIR="../../ipa/N"
 > ```
-> 进大版本、新建 `ipa/8` 之后必须同步改这一行，否则产物会落回旧目录。
+> 新建 `code/N` 时同步改这一行（`code/3` 对应 `ipa/3`），否则产物会落回旧目录。
 >
 > `build_ipa.sh` 是**本地开发脚本**，只留在 `OJIPA/code/N`，不进公开仓库。
 
@@ -230,7 +230,7 @@ git grep -niE "ghp_[A-Za-z0-9]{20,}|/Users/[A-Za-z]"                            
 - [ ] Release 只有 `ipa` + `-src.zip` 两个附件，没有 `sha256.txt`
 - [ ] 正文写清安装方式（Sideloadly）、7 天签名限制、本版改动
 - [ ] Latest 指向本版（从旧到新发布）
-- [ ] 本地归档 `OJIPA/ipa/7/` 与 `cp-navigator-ios-releases/vX.Y.Z/` 各存一份 IPA + `sha256.txt`
+- [ ] 本地归档 `OJIPA/ipa/N/` 与 `cp-navigator-ios-releases/vX.Y.Z/` 各存一份 IPA 与 `-src.zip`（不存 `sha256.txt`）
 
 **真机**
 
