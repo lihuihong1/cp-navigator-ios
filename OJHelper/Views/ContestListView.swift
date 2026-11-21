@@ -67,9 +67,15 @@ struct ContestListView: View {
                 Spacer()
                 sourcesButton
             }
-            Text(subtitle)
-                .font(.system(size: 12))
-                .foregroundStyle(Theme.sub)
+            VStack(alignment: .leading, spacing: 3) {
+                infoLine("日期", Contest.windowText())
+                infoLine("平台", store.sourceNames)
+                if let at = store.lastQueriedAt {
+                    Text(countLine(at))
+                        .font(.system(size: 11.5))
+                        .foregroundStyle(Theme.sub)
+                }
+            }
         }
         .padding(.horizontal, 16)
         .padding(.top, 10)
@@ -125,13 +131,23 @@ struct ContestListView: View {
         .buttonStyle(.plain)
     }
 
-    private var subtitle: String {
-        if let at = store.lastQueriedAt {
-            let fail = store.failedCount
-            let failText = fail > 0 ? "（\(fail) 个源失败）" : ""
-            return "共 \(store.totalCount) 场\(failText) · \(Contest.windowText()) · \(Contest.formatter("HH:mm:ss").string(from: at)) 查询"
+    private func countLine(_ at: Date) -> String {
+        let fail = store.failedCount
+        let failText = fail > 0 ? " · \(fail) 个源失败" : ""
+        let time = Contest.formatter("HH:mm:ss").string(from: at)
+        return "共 \(store.totalCount) 场\(failText) · \(time) 查询"
+    }
+
+    private func infoLine(_ label: String, _ value: String) -> some View {
+        HStack(alignment: .firstTextBaseline, spacing: 6) {
+            Text(label)
+                .font(.system(size: 11.5))
+                .foregroundStyle(Theme.sub)
+            Text(value)
+                .font(.system(size: 11.5))
+                .foregroundStyle(Theme.text.opacity(0.72))
+                .fixedSize(horizontal: false, vertical: true)
         }
-        return "\(Contest.windowText()) · \(store.sourceNames)"
     }
 
     // MARK: - 正文
@@ -164,11 +180,11 @@ struct ContestListView: View {
 
     private var introCard: some View {
         VStack(spacing: 6) {
-            Text("点右上角「查询」")
+            Text("暂无比赛信息")
                 .font(.system(size: 15, weight: .bold))
                 .foregroundStyle(Theme.text)
-            Text("会实时访问 \(store.sourceNames) 的公开页面，\n列出 \(Contest.windowText()) 之间未开始和正在进行的比赛。")
-                .font(.system(size: 12))
+            Text("请点击右上角「查询」获取比赛信息。")
+                .font(.system(size: 12.5))
                 .foregroundStyle(Theme.sub)
                 .multilineTextAlignment(.center)
             Text("查询结果不落盘，退出应用即清空；收藏另存本地。")
