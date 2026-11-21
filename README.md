@@ -1,14 +1,14 @@
 # cp-navigator-ios
 
-OJ 助手的 iOS 版（SwiftUI）。当前 **1.1.0**：六站真实比赛 + 开赛提醒，界面按 Android 版重做。
+OJ 助手的 iOS 版（SwiftUI）。当前 **1.2.0**：六站真实比赛 + 开赛提醒 + 日历写入（P2），界面按 Android 版重做。
 
 ## 功能
 
 - **六站比赛**：洛谷、Codeforces、AtCoder、蓝桥、力扣、牛客；六路并行抓取，只保留「今天 0 点 ~ 未来 7 天」。
 - **不自动查询**：进入比赛页先显示引导，点右上角「查询」才联网；结果只留在内存，退出应用即清空（与 Android 版一致）。
 - **两种视图**：「按平台」分组（带站点 logo，可折叠）与「按日期」分组（今天起 7 天，可折叠）；平台可多选，至少一个。
-- **行内操作**：☆ 收藏（本地保存）、铃铛设置提醒（开赛时 / 提前 5 / 10 / 15 分钟）。
-- **收藏页**：只读本地，不联网；支持同样的提醒操作。
+- **行内操作**：☆ 收藏（本地保存）、铃铛设置提醒（开赛时 / 提前 5 / 10 / 15 分钟）、「日历」把比赛写进系统日历（EventKit，预填标题/描述/北京时间/提前 15 分钟提醒）。
+- **收藏页**：只读本地，不联网；支持同样的提醒与日历操作。
 - **提醒**：`UNUserNotificationCenter` 本地通知，杀进程也会响。
 - **容错**：单站失败不影响其它站，列表底部提示失败站点。
 
@@ -20,8 +20,8 @@ OJHelper/
   App/                   OJHelperApp.swift、RootView.swift
   Design/                Theme.swift（与 Android 版同一套配色）
   Model/                 Contest.swift
-  Service/               ContestAPI（六站抓取）、ContestStore、NotificationManager
-  Views/                 ContestListView、ContestRow、FavoritesView、SourcesSheet、SettingsView、LogoView
+  Service/               ContestAPI（六站抓取）、ContestStore、NotificationManager、CalendarService
+  Views/                 ContestListView、ContestRow、FavoritesView、SourcesSheet、CalendarEditor、SettingsView、LogoView
   Resources/             Assets.xcassets（AppIcon、AccentColor、六站 logo）
 .github/workflows/ios.yml  构建未签名 IPA 的 CI
 ```

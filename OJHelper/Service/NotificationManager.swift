@@ -6,18 +6,30 @@ import UserNotifications
 final class NotificationManager: ObservableObject {
     static let shared = NotificationManager()
 
-    /// 已排程的 identifier 集合，形如 "contest-sample-luogu"。
-    @Published private(set) var pending: Set<String> = []
+    /// identifier -> 提前分钟数；只包含仍待触发的提醒。
+    @Published private(set) var leads: [String: Int] = [:]
     @Published private(set) var authorized = false
+    @Published private(set) var status: UNAuthorizationStatus = .notDetermined
     @Published private(set) var lastError: String?
 
     private let center = UNUserNotificationCenter.current()
 
     private init() {}
 
+    var statusText: String {
+        switch status {
+        case .authorized, .provisional, .ephemeral: return "已允许"
+        case .denied: return "已关闭"
+        case .notDetermined: return "未设置"
+        @unknown default: return "未知"
+        }
+    }
+
     static func identifier(for contest: Contest) -> String {
         "contest-\(contest.id)"
     }
+
+    var pendingCount: Int { leads.count }
 
     func requestAuthorization() async {
         do {
@@ -31,16 +43,29 @@ final class NotificationManager: ObservableObject {
 
     func refresh() async {
         let requests = await center.pendingNotificationRequests()
-        pending = Set(requests.map { $0.identifier })
+        var out: [String: Int] = [:]
+        for request in requests where request.identifier.hasPrefix("contest-") {
+            out[request.identifier] = request.content.userInfo["lead"] as? Int ?? 0
+        }
+        leads = out
+        status = await center.notificationSettings().authorizationStatus
+    }
+
+    /// 已设置的提前量，nil 表示没设。
+    func lead(for contest: Contest) -> Int? {
+        leads[Self.identifier(for: contest)]
     }
 
     func isReminded(_ contest: Contest) -> Bool {
-        pending.contains(Self.identifier(for: contest))
+        lead(for: contest) != nil
     }
 
     /// 给某场比赛排一条通知；lead 为提前分钟数，0 表示开赛时。
     @discardableResult
     func schedule(_ contest: Contest, lead: Int) async -> Bool {
+        if status == .notDetermined {
+            await requestAuthorization()
+        }
         let fireAt = contest.start.addingTimeInterval(Double(-lead) * 60)
         guard fireAt > Date() else {
             lastError = "比赛已开始，无法设置提醒"
@@ -52,11 +77,13 @@ final class NotificationManager: ObservableObject {
         content.body = "[\(contest.oj.name)] \(contest.title)\n\(contest.timeRange)"
         content.sound = .default
         content.threadIdentifier = "contest"
+        content.userInfo = ["lead": lead]
 
-        let comps = Calendar.current.dateComponents(
+        var comps = Contest.calendar.dateComponents(
             [.year, .month, .day, .hour, .minute, .second],
             from: fireAt
         )
+        comps.timeZone = Contest.calendar.timeZone
         let trigger = UNCalendarNotificationTrigger(dateMatching: comps, repeats: false)
         let request = UNNotificationRequest(
             identifier: Self.identifier(for: contest),
