@@ -52,33 +52,6 @@ CI 每次 push 到 `main` 会自动构建未签名 IPA，产物在 Actions 的 `
 
 版本号在 `project.yml` 的 `MARKETING_VERSION` / `CURRENT_PROJECT_VERSION` 维护；打 tag 前改成新版本并同步 tag。规则固定 `1.X.Y`，功能版第二位 +1 并换 `OJIPA/code/N` 目录。
 
-## 抓取接口（与 Android 版一致）
-
-| 站点 | 入口 |
-| --- | --- |
-| Codeforces | `codeforces.com/api/contest.list?gym=false` |
-| 力扣 | `leetcode.cn/graphql`（contestUpcomingContests），失败回退 `/contest/api/list/` |
-| 洛谷 | `luogu.com.cn/contest/list?_contentOnly=1`（需 `x-lentille-request: content-only`） |
-| 蓝桥 | `lanqiao.cn/api/v2/contests/?status=not_finished&game_type_code=2` |
-| AtCoder | `atcoder.jp/contests/` 的 SSR 表格 |
-| 牛客 | `ac.nowcoder.com/acm/contest/vip-index` |
-
-榜单入口：`board.xcpcio.com`（XCPCIO）、`rl.algoux.cn`（RankLand），均在应用内 WebView 打开。
-
-成绩统计（我的）入口：
-
-| 站点 | 入口 |
-| --- | --- |
-| Codeforces | `api/user.info`、`api/user.status`（解题去重） |
-| AtCoder | `atcoder.jp/users/<h>/history/json`、kenkoooo `ac_rank` |
-| 力扣 | `leetcode.cn/graphql`（numAcceptedQuestions）、`/graphql/noj-go/`（userContestRanking） |
-| 洛谷 | `api/user/search` + `api/user/info/<uid>` |
-| 牛客 | `ac.nowcoder.com/acm/contest/profile/<id>` |
-| VJudge | `vjudge.net/user/<h>` 的 `profile-header-data` JSON |
-| HDU | `acm.hdu.edu.cn/userstatus.php?user=<h>`（GB18030） |
-
-解题数优先取 ojhunt 统一接口，失败再回退各站原生统计。站点改版可能导致单站失败，属已知限制。
-
 ## 与 Android 版的关系
 
 Android 源在另一个仓库 `cp-navigator`（源码摊平在根目录）。两端各自独立构建，共享的是比赛数据接口与交互约定，代码不共享。iOS 版不抓取 Android 的 SQLite，也不复用 Java 代码。
