@@ -32,15 +32,20 @@ struct ContestListView: View {
         }
     }
 
+    @ViewBuilder
     private var sections: some View {
-        ForEach(store.grouped) { group in
-            Section {
-                ForEach(group.items) { contest in
-                    row(for: contest)
-                }
-            } header: {
-                Text(group.day)
+        ForEach(store.grouped, id: \.id) { group in
+            section(for: group)
+        }
+    }
+
+    private func section(for group: DayGroup) -> some View {
+        Section {
+            ForEach(group.items, id: \.id) { contest in
+                row(for: contest)
             }
+        } header: {
+            Text(group.day)
         }
     }
 
